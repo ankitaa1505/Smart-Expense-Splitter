@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(TransactionController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@org.springframework.security.test.context.support.WithMockUser
 class TransactionControllerTest {
 
     @Autowired
@@ -39,6 +40,12 @@ class TransactionControllerTest {
 
     @MockBean
     private TransactionService transactionService;
+
+    @MockBean
+    private com.expensetracker.security.JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private com.expensetracker.security.CustomUserDetailsService userDetailsService;
 
     @Test
     @DisplayName("POST /api/transactions: Should return 201 Created with Location header on valid request")

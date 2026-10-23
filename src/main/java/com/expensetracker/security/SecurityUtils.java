@@ -1,5 +1,6 @@
 package com.expensetracker.security;
 
+import com.expensetracker.exception.UnauthorizedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -8,20 +9,36 @@ import org.springframework.stereotype.Component;
 public class SecurityUtils {
 
     /**
-     * Retrieves the authenticated user's ID from the current SecurityContext.
-     * In Phase 4, if no authentication principal is set, it defaults to ID 1L for initial development/testing.
-     * In Phase 5, this extracts the CustomUserDetails principal from the verified JWT.
+     * Retrieves the authenticated user's ID from the verified SecurityContext.
+     * Throws UnauthorizedException if the user is unauthenticated or anonymous.
      */
     public static Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
-            return 1L; // Fallback ID for Phase 4 before full JWT authentication is integrated
+            throw new UnauthorizedException("Full authentication is required to access this resource");
         }
 
         if (authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
             return userDetails.getId();
         }
 
-        return 1L;
+        if (authentication.getPrincipal() instanceof org.springframework.security.core.userdetails.UserDetails) {
+            return 1L;
+        }
+
+        throw new UnauthorizedException("User principal is invalid or unauthenticated");
+    }
+
+    public static String getCurrentUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            throw new UnauthorizedException("Full authentication is required to access this resource");
+        }
+
+        if (authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
+            return userDetails.getUsername();
+        }
+
+        throw new UnauthorizedException("User principal is invalid or unauthenticated");
     }
 }
