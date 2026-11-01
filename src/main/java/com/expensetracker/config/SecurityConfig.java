@@ -110,6 +110,7 @@ public class SecurityConfig {
                 // 5. Request Authorization Rules
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
+                        .requestMatchers("/", "/favicon.ico").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(
                                 "/v3/api-docs/**",
