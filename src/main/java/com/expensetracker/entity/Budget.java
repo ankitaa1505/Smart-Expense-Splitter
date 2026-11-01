@@ -1,6 +1,8 @@
 package com.expensetracker.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -23,9 +25,11 @@ public class Budget extends BaseEntity {
     @JoinColumn(name = "category_id", foreignKey = @ForeignKey(name = "fk_budgets_category"))
     private Category category;
 
+    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(name = "budget_month", nullable = false)
     private int budgetMonth;
 
+    @JdbcTypeCode(SqlTypes.SMALLINT)
     @Column(name = "budget_year", nullable = false)
     private int budgetYear;
 
