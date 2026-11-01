@@ -1,6 +1,6 @@
 # 🪙 Smart Expense Tracker REST API
 
-[![Java CI/CD Pipeline](https://github.com/ankitaa1505/SmartExpenseTracker/actions/workflows/ci.yml/badge.svg)](https://github.com/ankitaa1505/SmartExpenseTracker/actions)
+[![Java CI/CD Pipeline](https://github.com/ankitaa1505/Smart-Expense-Splitter/actions/workflows/ci.yml/badge.svg)](https://github.com/ankitaa1505/Smart-Expense-Splitter/actions)
 ![Java](https://img.shields.io/badge/Java-21%20LTS-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3.5-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
