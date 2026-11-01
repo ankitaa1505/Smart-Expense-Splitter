@@ -16,6 +16,7 @@ import com.expensetracker.repository.UserRepository;
 import com.expensetracker.repository.specification.TransactionSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,18 +41,22 @@ public class TransactionService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final TransactionMapper transactionMapper;
+    private final BudgetService budgetService;
 
     public TransactionService(TransactionRepository transactionRepository,
                               CategoryRepository categoryRepository,
                               UserRepository userRepository,
-                              TransactionMapper transactionMapper) {
+                              TransactionMapper transactionMapper,
+                              BudgetService budgetService) {
         this.transactionRepository = transactionRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.transactionMapper = transactionMapper;
+        this.budgetService = budgetService;
     }
 
     @Transactional
+    @CacheEvict(value = "analytics:summary", allEntries = true)
     public TransactionResponse createTransaction(TransactionRequest request, Long userId) {
         log.info("Creating {} transaction for user ID: {}, amount: {}", request.type(), userId, request.amount());
 
@@ -71,6 +76,12 @@ public class TransactionService {
         Transaction transaction = transactionMapper.toEntity(request, user, category);
         Transaction saved = transactionRepository.save(transaction);
         log.info("Successfully created transaction ID: {} for user ID: {}", saved.getId(), userId);
+
+        // Check budget thresholds if this is an expense
+        if (saved.getType() == com.expensetracker.entity.enums.TransactionType.EXPENSE) {
+            budgetService.checkBudgetThresholds(userId, saved.getTransactionDate(), saved.getCategory().getId());
+        }
+
         return transactionMapper.toDto(saved);
     }
 
@@ -82,6 +93,7 @@ public class TransactionService {
     }
 
     @Transactional
+    @CacheEvict(value = "analytics:summary", allEntries = true)
     public TransactionResponse updateTransaction(Long id, TransactionRequest request, Long userId) {
         log.info("Updating transaction ID: {} for user ID: {}", id, userId);
 
@@ -100,16 +112,26 @@ public class TransactionService {
         transactionMapper.updateEntityFromRequest(transaction, request, category);
         Transaction updated = transactionRepository.save(transaction);
         log.info("Successfully updated transaction ID: {}", updated.getId());
+
+        if (updated.getType() == com.expensetracker.entity.enums.TransactionType.EXPENSE) {
+            budgetService.checkBudgetThresholds(userId, updated.getTransactionDate(), updated.getCategory().getId());
+        }
+
         return transactionMapper.toDto(updated);
     }
 
     @Transactional
+    @CacheEvict(value = "analytics:summary", allEntries = true)
     public void deleteTransaction(Long id, Long userId) {
         log.info("Deleting transaction ID: {} for user ID: {}", id, userId);
         Transaction transaction = transactionRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction", "id", id));
         transactionRepository.delete(transaction);
         log.info("Successfully deleted transaction ID: {}", id);
+
+        if (transaction.getType() == com.expensetracker.entity.enums.TransactionType.EXPENSE) {
+            budgetService.checkBudgetThresholds(userId, transaction.getTransactionDate(), transaction.getCategory().getId());
+        }
     }
 
     public PageResponse<TransactionResponse> getTransactions(TransactionFilterRequest filter, Long userId) {

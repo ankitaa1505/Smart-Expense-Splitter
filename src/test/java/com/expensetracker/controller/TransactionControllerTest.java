@@ -42,6 +42,9 @@ class TransactionControllerTest {
     private TransactionService transactionService;
 
     @MockBean
+    private com.expensetracker.service.ExportService exportService;
+
+    @MockBean
     private com.expensetracker.security.JwtTokenProvider jwtTokenProvider;
 
     @MockBean

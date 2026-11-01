@@ -10,11 +10,15 @@ import com.expensetracker.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -22,9 +26,12 @@ import java.net.URI;
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final com.expensetracker.service.ExportService exportService;
 
-    public TransactionController(TransactionService transactionService) {
+    public TransactionController(TransactionService transactionService,
+                                 com.expensetracker.service.ExportService exportService) {
         this.transactionService = transactionService;
+        this.exportService = exportService;
     }
 
     @PostMapping
@@ -77,5 +84,21 @@ public class TransactionController {
         Long userId = SecurityUtils.getCurrentUserId();
         PageResponse<TransactionResponse> response = transactionService.getTransactions(filter, userId);
         return ResponseEntity.ok(ApiResponse.success("Transactions retrieved successfully", response));
+    }
+
+    @GetMapping("/export")
+    @Operation(summary = "Export user transactions to CSV file")
+    public ResponseEntity<byte[]> exportTransactions(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        byte[] csvData = exportService.exportTransactionsToCsv(userId, startDate, endDate);
+
+        String filename = "transactions_" + LocalDate.now() + ".csv";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(csvData);
     }
 }
