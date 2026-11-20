@@ -9,7 +9,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        // Automatically redirect root URL to interactive Swagger UI documentation
-        registry.addRedirectViewController("/", "/swagger-ui/index.html");
+        // Forward root URL to the built React Single Page Application
+        registry.addViewController("/").setViewName("forward:/index.html");
     }
 }
